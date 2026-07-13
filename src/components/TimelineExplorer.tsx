@@ -494,6 +494,10 @@ export default function TimelineExplorer({ processors, eras }: Props) {
     const isActive = (id: string) =>
         openId === id || compare?.a === id || compare?.b === id;
 
+    // Global compute max drives each tile's little performance bar, so the
+    // evolution reads at a glance: tiny bars in the 1990s, full bars today.
+    const maxScore = Math.max(...processors.map(computeScore), 1);
+
     const filterBtnBase: React.CSSProperties = {
         display: "inline-flex",
         alignItems: "center",
@@ -792,63 +796,123 @@ export default function TimelineExplorer({ processors, eras }: Props) {
                 })()}
 
             {/* Timeline rows */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-                {byEra.map(({ era, procs }) => {
+            <div style={{ display: "flex", flexDirection: "column" }}>
+                {byEra.map(({ era, procs }, eraIdx) => {
                     const color = ERA_COLORS[era.id] ?? "#22D3EE";
+                    const isLastEra = eraIdx === byEra.length - 1;
+                    const nextColor =
+                        ERA_COLORS[byEra[eraIdx + 1]?.era.id] ?? color;
                     return (
-                        <div key={era.id}>
+                        <div key={era.id} style={{ display: "flex", gap: 16 }}>
+                            {/* Left rail: a numbered station node + connector */}
                             <div
+                                aria-hidden="true"
                                 style={{
                                     display: "flex",
+                                    flexDirection: "column",
                                     alignItems: "center",
-                                    gap: 12,
-                                    marginBottom: 16,
+                                    flexShrink: 0,
+                                    width: 34,
                                 }}
                             >
-                                <span
+                                <div
+                                    style={{
+                                        width: 34,
+                                        height: 34,
+                                        borderRadius: "50%",
+                                        border: `2px solid ${color}`,
+                                        background: `${color}1f`,
+                                        color,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontFamily:
+                                            "'Space Grotesk', sans-serif",
+                                        fontWeight: 700,
+                                        fontSize: 15,
+                                        boxShadow: `0 0 16px ${color}40`,
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    {era.order}
+                                </div>
+                                {!isLastEra && (
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            width: 2,
+                                            minHeight: 24,
+                                            marginTop: 4,
+                                            background: `linear-gradient(to bottom, ${color}66, ${nextColor}33)`,
+                                        }}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Right content: era header + chip tiles */}
+                            <div
+                                style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    paddingBottom: isLastEra ? 0 : 40,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "baseline",
+                                        justifyContent: "space-between",
+                                        gap: 12,
+                                        marginBottom: 2,
+                                    }}
+                                >
+                                    <h3
+                                        style={{
+                                            fontFamily:
+                                                "'Space Grotesk', sans-serif",
+                                            fontWeight: 700,
+                                            fontSize: 18,
+                                            color,
+                                            letterSpacing: "-0.01em",
+                                            margin: 0,
+                                        }}
+                                    >
+                                        {era.name}
+                                    </h3>
+                                    <span
+                                        style={{
+                                            fontFamily:
+                                                "'JetBrains Mono', monospace",
+                                            fontSize: 11,
+                                            color: "var(--text-secondary)",
+                                            whiteSpace: "nowrap",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        {procs.length} chip
+                                        {procs.length > 1 ? "s" : ""}
+                                    </span>
+                                </div>
+                                <p
                                     style={{
                                         fontFamily:
                                             "'JetBrains Mono', monospace",
                                         fontSize: 12,
-                                        letterSpacing: "0.1em",
+                                        letterSpacing: "0.08em",
                                         color: "var(--text-secondary)",
-                                        whiteSpace: "nowrap",
+                                        margin: "0 0 16px",
                                     }}
                                 >
                                     {era.period}
-                                </span>
+                                </p>
+
                                 <div
                                     style={{
-                                        flex: 1,
-                                        height: 1,
-                                        background: `linear-gradient(to right, ${color}30, rgba(255,255,255,0.04))`,
-                                    }}
-                                    aria-hidden="true"
-                                />
-                                <span
-                                    style={{
-                                        fontFamily:
-                                            "'Space Grotesk', sans-serif",
-                                        fontWeight: 600,
-                                        fontSize: 14,
-                                        color,
-                                        letterSpacing: "0.03em",
-                                        whiteSpace: "nowrap",
+                                        display: "flex",
+                                        gap: 10,
+                                        flexWrap: "wrap",
                                     }}
                                 >
-                                    {era.name}
-                                </span>
-                            </div>
-
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: 10,
-                                    overflowX: "auto",
-                                    paddingBottom: 8,
-                                    flexWrap: "wrap",
-                                }}
-                            >
                                 {procs.map((proc) => {
                                     const active = isActive(proc.id);
                                     const pinned =
@@ -858,10 +922,18 @@ export default function TimelineExplorer({ processors, eras }: Props) {
                                         : pickMode
                                           ? `Compare ${proc.name} against the pinned chip.`
                                           : `${proc.name}: ${proc.cores} core${proc.cores > 1 ? "s" : ""}, ${proc.clockSpeedGHz} GHz. ${active ? "Close" : "View"} specs.`;
+                                    const scorePct = Math.max(
+                                        5,
+                                        Math.round(
+                                            (computeScore(proc) / maxScore) *
+                                                100,
+                                        ),
+                                    );
                                     return (
                                         <div
                                             key={proc.id}
                                             id={proc.id}
+                                            className="tl-tile-wrap"
                                             style={{ flexShrink: 0 }}
                                         >
                                             <button
@@ -876,120 +948,215 @@ export default function TimelineExplorer({ processors, eras }: Props) {
                                                     openId === proc.id
                                                 }
                                                 aria-label={label}
+                                                className="tl-tile"
                                                 style={{
+                                                    ["--c" as string]: color,
                                                     display: "flex",
                                                     flexDirection: "column",
-                                                    alignItems: "center",
-                                                    gap: 6,
-                                                    padding: "10px 10px 8px",
-                                                    borderRadius: 10,
-                                                    border: `1px solid ${active ? color + "60" : "var(--border-subtle)"}`,
+                                                    alignItems: "stretch",
+                                                    gap: 8,
+                                                    padding: "11px 12px 12px",
+                                                    borderRadius: 11,
+                                                    width: 140,
+                                                    textAlign: "left",
+                                                    border: `1px solid ${active ? color + "66" : "var(--border-subtle)"}`,
+                                                    borderTop: `2.5px solid ${active ? color : color + "66"}`,
                                                     background: active
-                                                        ? `${color}0d`
+                                                        ? `${color}12`
                                                         : "var(--bg-surface)",
                                                     cursor: "pointer",
-                                                    width: 96,
-                                                    textAlign: "center",
                                                     transition:
                                                         "border-color 200ms, background 200ms, box-shadow 200ms, transform 200ms",
                                                     boxShadow: active
-                                                        ? `0 0 0 1px ${color}25, 0 0 22px ${color}30, 0 6px 18px rgba(0,0,0,0.45)`
+                                                        ? `0 0 0 1px ${color}25, 0 8px 26px ${color}22, 0 6px 18px rgba(0,0,0,0.45)`
                                                         : "none",
                                                     transform: active
-                                                        ? "scale(1.05)"
-                                                        : "none",
+                                                        ? "translateY(-2px)"
+                                                        : undefined,
                                                 }}
                                             >
+                                                {/* Top: process-node badge + chip glyph */}
                                                 <div
                                                     style={{
-                                                        position: "relative",
-                                                        width: 32,
-                                                        height: 32,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        gap: 6,
                                                     }}
                                                 >
-                                                    {active && (
-                                                        <motion.div
-                                                            animate={{
-                                                                scale: [1, 1.5],
-                                                                opacity: [
-                                                                    0.45, 0,
-                                                                ],
-                                                            }}
-                                                            transition={{
-                                                                duration: 1.2,
-                                                                repeat: Infinity,
-                                                                ease: "easeOut",
-                                                            }}
+                                                    <span
+                                                        style={{
+                                                            fontFamily:
+                                                                "'JetBrains Mono', monospace",
+                                                            fontSize: 10,
+                                                            letterSpacing:
+                                                                "0.04em",
+                                                            padding: "2px 7px",
+                                                            borderRadius: 999,
+                                                            border: `1px solid ${color}44`,
+                                                            background: `${color}14`,
+                                                            color,
+                                                            whiteSpace: "nowrap",
+                                                        }}
+                                                    >
+                                                        {proc.processNodeNm} nm
+                                                    </span>
+                                                    <div
+                                                        style={{
+                                                            position:
+                                                                "relative",
+                                                            width: 22,
+                                                            height: 22,
+                                                            flexShrink: 0,
+                                                        }}
+                                                    >
+                                                        {active && (
+                                                            <motion.div
+                                                                animate={{
+                                                                    scale: [
+                                                                        1, 1.6,
+                                                                    ],
+                                                                    opacity: [
+                                                                        0.4, 0,
+                                                                    ],
+                                                                }}
+                                                                transition={{
+                                                                    duration: 1.2,
+                                                                    repeat: Infinity,
+                                                                    ease: "easeOut",
+                                                                }}
+                                                                style={{
+                                                                    position:
+                                                                        "absolute",
+                                                                    inset: 0,
+                                                                    borderRadius:
+                                                                        "50%",
+                                                                    border: `1px solid ${color}`,
+                                                                }}
+                                                                aria-hidden="true"
+                                                            />
+                                                        )}
+                                                        <div
                                                             style={{
                                                                 position:
                                                                     "absolute",
                                                                 inset: 0,
-                                                                borderRadius:
-                                                                    "50%",
-                                                                border: `1px solid ${color}`,
+                                                                borderRadius: 6,
+                                                                border: `1.5px solid ${active ? color : "rgba(255,255,255,0.16)"}`,
+                                                                background: active
+                                                                    ? `${color}1f`
+                                                                    : "transparent",
+                                                                display: "flex",
+                                                                alignItems:
+                                                                    "center",
+                                                                justifyContent:
+                                                                    "center",
+                                                                transition:
+                                                                    "border-color 200ms, background 200ms",
                                                             }}
-                                                        />
-                                                    )}
-                                                    <div
-                                                        style={{
-                                                            position:
-                                                                "absolute",
-                                                            inset: 0,
-                                                            borderRadius: "50%",
-                                                            border: `1.5px solid ${active ? color : "rgba(255,255,255,0.14)"}`,
-                                                            background: active
-                                                                ? `${color}1f`
-                                                                : "transparent",
-                                                            display: "flex",
-                                                            alignItems:
-                                                                "center",
-                                                            justifyContent:
-                                                                "center",
-                                                            transition:
-                                                                "border-color 200ms, background 200ms",
-                                                        }}
-                                                        aria-hidden="true"
-                                                    >
-                                                        <Cpu
-                                                            size={11}
-                                                            style={{
-                                                                color: active
-                                                                    ? color
-                                                                    : "rgba(255,255,255,0.28)",
-                                                            }}
-                                                        />
+                                                            aria-hidden="true"
+                                                        >
+                                                            <Cpu
+                                                                size={11}
+                                                                style={{
+                                                                    color: active
+                                                                        ? color
+                                                                        : "rgba(255,255,255,0.3)",
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
 
+                                                {/* Chip name */}
                                                 <span
                                                     style={{
                                                         fontFamily:
-                                                            "'JetBrains Mono', monospace",
-                                                        fontSize: 11,
-                                                        lineHeight: 1.3,
-                                                        color: active
-                                                            ? color
-                                                            : "var(--text-secondary)",
-                                                        transition:
-                                                            "color 200ms",
-                                                        wordBreak: "break-word",
+                                                            "'Space Grotesk', sans-serif",
+                                                        fontWeight: 600,
+                                                        fontSize: 13,
+                                                        lineHeight: 1.25,
+                                                        color: "var(--text-primary)",
+                                                        minHeight: 33,
                                                     }}
                                                 >
                                                     {proc.name}
                                                 </span>
 
+                                                {/* Cores + clock */}
                                                 <span
                                                     style={{
                                                         fontFamily:
                                                             "'JetBrains Mono', monospace",
-                                                        fontSize: 10,
+                                                        fontSize: 10.5,
                                                         color: "var(--text-secondary)",
                                                         lineHeight: 1.3,
                                                     }}
                                                 >
-                                                    {proc.processNodeNm}nm /{" "}
-                                                    {proc.clockSpeedGHz}GHz
+                                                    {proc.cores} core
+                                                    {proc.cores > 1 ? "s" : ""} ·{" "}
+                                                    {proc.clockSpeedGHz} GHz
                                                 </span>
+
+                                                {/* Relative-performance bar across the whole timeline */}
+                                                <div style={{ marginTop: 1 }}>
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            justifyContent:
+                                                                "space-between",
+                                                            marginBottom: 3,
+                                                        }}
+                                                    >
+                                                        <span
+                                                            style={{
+                                                                fontFamily:
+                                                                    "'JetBrains Mono', monospace",
+                                                                fontSize: 9,
+                                                                letterSpacing:
+                                                                    "0.04em",
+                                                                color: "var(--text-secondary)",
+                                                                opacity: 0.75,
+                                                            }}
+                                                        >
+                                                            {
+                                                                proc.transistorCount
+                                                            }
+                                                        </span>
+                                                        <span
+                                                            style={{
+                                                                fontFamily:
+                                                                    "'JetBrains Mono', monospace",
+                                                                fontSize: 9,
+                                                                color,
+                                                                opacity: 0.9,
+                                                            }}
+                                                        >
+                                                            {scorePct}%
+                                                        </span>
+                                                    </div>
+                                                    <div
+                                                        style={{
+                                                            height: 3,
+                                                            borderRadius: 99,
+                                                            background:
+                                                                "rgba(255,255,255,0.06)",
+                                                            overflow: "hidden",
+                                                        }}
+                                                        title="Relative compute vs. the newest chip"
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                height: "100%",
+                                                                width: `${scorePct}%`,
+                                                                borderRadius: 99,
+                                                                background: color,
+                                                                opacity: 0.85,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
                                             </button>
 
                                             <AnimatePresence>
@@ -1033,6 +1200,7 @@ export default function TimelineExplorer({ processors, eras }: Props) {
                                         </div>
                                     );
                                 })}
+                                </div>
                             </div>
                         </div>
                     );
@@ -1054,6 +1222,17 @@ export default function TimelineExplorer({ processors, eras }: Props) {
             )}
 
             <style>{`
+        .tl-tile:hover {
+          border-color: color-mix(in srgb, var(--c) 50%, transparent) !important;
+          transform: translateY(-3px);
+          box-shadow: 0 -1px 0 var(--c), 0 12px 26px rgba(0,0,0,0.5);
+        }
+        @media (max-width: 480px) {
+          /* Two cards per row, filling the column instead of one 140px tile
+             floating in empty space. */
+          .tl-tile-wrap { flex: 1 1 calc(50% - 5px) !important; min-width: 0 !important; }
+          .tl-tile-wrap .tl-tile { width: 100% !important; }
+        }
         @media (max-width: 640px) {
           .cmp-grid { grid-template-columns: 1fr !important; }
           .cmp-grid > div[aria-hidden="true"] { flex-direction: row !important; padding: 10px 0 !important; }
