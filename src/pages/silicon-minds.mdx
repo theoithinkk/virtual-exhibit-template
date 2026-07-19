@@ -7,7 +7,7 @@ author: "Bancoro, Maria Fides; Ercia, Marc Jared Sean; Garcia, Theodore Rodolfo 
 
 import ChipFloat from '../components/ChipFloat.astro';
 import { getCollection } from 'astro:content';
-import '../styles/silicon-minds-home.css';
+import '../styles/S01_Group5_home.css';
 
 export const erasRaw = await getCollection('eras');
 export const eras = erasRaw.map(e => e.data).sort((a, b) => a.order - b.order);

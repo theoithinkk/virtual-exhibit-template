@@ -913,293 +913,315 @@ export default function TimelineExplorer({ processors, eras }: Props) {
                                         flexWrap: "wrap",
                                     }}
                                 >
-                                {procs.map((proc) => {
-                                    const active = isActive(proc.id);
-                                    const pinned =
-                                        pickMode && compare?.a === proc.id;
-                                    const label = pinned
-                                        ? `${proc.name} is pinned for comparison. Click to cancel.`
-                                        : pickMode
-                                          ? `Compare ${proc.name} against the pinned chip.`
-                                          : `${proc.name}: ${proc.cores} core${proc.cores > 1 ? "s" : ""}, ${proc.clockSpeedGHz} GHz. ${active ? "Close" : "View"} specs.`;
-                                    const scorePct = Math.max(
-                                        5,
-                                        Math.round(
-                                            (computeScore(proc) / maxScore) *
-                                                100,
-                                        ),
-                                    );
-                                    return (
-                                        <div
-                                            key={proc.id}
-                                            id={proc.id}
-                                            className="tl-tile-wrap"
-                                            style={{ flexShrink: 0 }}
-                                        >
-                                            <button
-                                                ref={(el) => {
-                                                    nodeRefs.current[proc.id] =
-                                                        el;
-                                                }}
-                                                onClick={() =>
-                                                    handleTile(proc.id)
-                                                }
-                                                aria-expanded={
-                                                    openId === proc.id
-                                                }
-                                                aria-label={label}
-                                                className="tl-tile"
-                                                style={{
-                                                    ["--c" as string]: color,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    alignItems: "stretch",
-                                                    gap: 8,
-                                                    padding: "11px 12px 12px",
-                                                    borderRadius: 11,
-                                                    width: 140,
-                                                    textAlign: "left",
-                                                    border: `1px solid ${active ? color + "66" : "var(--border-subtle)"}`,
-                                                    borderTop: `2.5px solid ${active ? color : color + "66"}`,
-                                                    background: active
-                                                        ? `${color}12`
-                                                        : "var(--bg-surface)",
-                                                    cursor: "pointer",
-                                                    transition:
-                                                        "border-color 200ms, background 200ms, box-shadow 200ms, transform 200ms",
-                                                    boxShadow: active
-                                                        ? `0 0 0 1px ${color}25, 0 8px 26px ${color}22, 0 6px 18px rgba(0,0,0,0.45)`
-                                                        : "none",
-                                                    transform: active
-                                                        ? "translateY(-2px)"
-                                                        : undefined,
-                                                }}
+                                    {procs.map((proc) => {
+                                        const active = isActive(proc.id);
+                                        const pinned =
+                                            pickMode && compare?.a === proc.id;
+                                        const label = pinned
+                                            ? `${proc.name} is pinned for comparison. Click to cancel.`
+                                            : pickMode
+                                              ? `Compare ${proc.name} against the pinned chip.`
+                                              : `${proc.name}: ${proc.cores} core${proc.cores > 1 ? "s" : ""}, ${proc.clockSpeedGHz} GHz. ${active ? "Close" : "View"} specs.`;
+                                        const scorePct = Math.max(
+                                            5,
+                                            Math.round(
+                                                (computeScore(proc) /
+                                                    maxScore) *
+                                                    100,
+                                            ),
+                                        );
+                                        return (
+                                            <div
+                                                key={proc.id}
+                                                id={proc.id}
+                                                className="tl-tile-wrap"
+                                                style={{ flexShrink: 0 }}
                                             >
-                                                {/* Top: process-node badge + chip glyph */}
-                                                <div
+                                                <button
+                                                    ref={(el) => {
+                                                        nodeRefs.current[
+                                                            proc.id
+                                                        ] = el;
+                                                    }}
+                                                    onClick={() =>
+                                                        handleTile(proc.id)
+                                                    }
+                                                    aria-expanded={
+                                                        openId === proc.id
+                                                    }
+                                                    aria-label={label}
+                                                    className="tl-tile"
                                                     style={{
+                                                        ["--c" as string]:
+                                                            color,
                                                         display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent:
-                                                            "space-between",
-                                                        gap: 6,
+                                                        flexDirection: "column",
+                                                        alignItems: "stretch",
+                                                        gap: 8,
+                                                        padding:
+                                                            "11px 12px 12px",
+                                                        borderRadius: 11,
+                                                        width: 140,
+                                                        textAlign: "left",
+                                                        border: `1px solid ${active ? color + "66" : "var(--border-subtle)"}`,
+                                                        borderTop: `2.5px solid ${active ? color : color + "66"}`,
+                                                        background: active
+                                                            ? `${color}12`
+                                                            : "var(--bg-surface)",
+                                                        cursor: "pointer",
+                                                        transition:
+                                                            "border-color 200ms, background 200ms, box-shadow 200ms, transform 200ms",
+                                                        boxShadow: active
+                                                            ? `0 0 0 1px ${color}25, 0 8px 26px ${color}22, 0 6px 18px rgba(0,0,0,0.45)`
+                                                            : "none",
+                                                        transform: active
+                                                            ? "translateY(-2px)"
+                                                            : undefined,
                                                     }}
                                                 >
-                                                    <span
-                                                        style={{
-                                                            fontFamily:
-                                                                "'JetBrains Mono', monospace",
-                                                            fontSize: 10,
-                                                            letterSpacing:
-                                                                "0.04em",
-                                                            padding: "2px 7px",
-                                                            borderRadius: 999,
-                                                            border: `1px solid ${color}44`,
-                                                            background: `${color}14`,
-                                                            color,
-                                                            whiteSpace: "nowrap",
-                                                        }}
-                                                    >
-                                                        {proc.processNodeNm} nm
-                                                    </span>
+                                                    {/* Top: process-node badge + chip glyph */}
                                                     <div
                                                         style={{
-                                                            position:
-                                                                "relative",
-                                                            width: 22,
-                                                            height: 22,
-                                                            flexShrink: 0,
+                                                            display: "flex",
+                                                            alignItems:
+                                                                "center",
+                                                            justifyContent:
+                                                                "space-between",
+                                                            gap: 6,
                                                         }}
                                                     >
-                                                        {active && (
-                                                            <motion.div
-                                                                animate={{
-                                                                    scale: [
-                                                                        1, 1.6,
-                                                                    ],
-                                                                    opacity: [
-                                                                        0.4, 0,
-                                                                    ],
-                                                                }}
-                                                                transition={{
-                                                                    duration: 1.2,
-                                                                    repeat: Infinity,
-                                                                    ease: "easeOut",
-                                                                }}
+                                                        <span
+                                                            style={{
+                                                                fontFamily:
+                                                                    "'JetBrains Mono', monospace",
+                                                                fontSize: 10,
+                                                                letterSpacing:
+                                                                    "0.04em",
+                                                                padding:
+                                                                    "2px 7px",
+                                                                borderRadius: 999,
+                                                                border: `1px solid ${color}44`,
+                                                                background: `${color}14`,
+                                                                color,
+                                                                whiteSpace:
+                                                                    "nowrap",
+                                                            }}
+                                                        >
+                                                            {proc.processNodeNm}{" "}
+                                                            nm
+                                                        </span>
+                                                        <div
+                                                            style={{
+                                                                position:
+                                                                    "relative",
+                                                                width: 22,
+                                                                height: 22,
+                                                                flexShrink: 0,
+                                                            }}
+                                                        >
+                                                            {active && (
+                                                                <motion.div
+                                                                    animate={{
+                                                                        scale: [
+                                                                            1,
+                                                                            1.6,
+                                                                        ],
+                                                                        opacity:
+                                                                            [
+                                                                                0.4,
+                                                                                0,
+                                                                            ],
+                                                                    }}
+                                                                    transition={{
+                                                                        duration: 1.2,
+                                                                        repeat: Infinity,
+                                                                        ease: "easeOut",
+                                                                    }}
+                                                                    style={{
+                                                                        position:
+                                                                            "absolute",
+                                                                        inset: 0,
+                                                                        borderRadius:
+                                                                            "50%",
+                                                                        border: `1px solid ${color}`,
+                                                                    }}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            )}
+                                                            <div
                                                                 style={{
                                                                     position:
                                                                         "absolute",
                                                                     inset: 0,
-                                                                    borderRadius:
-                                                                        "50%",
-                                                                    border: `1px solid ${color}`,
+                                                                    borderRadius: 6,
+                                                                    border: `1.5px solid ${active ? color : "rgba(255,255,255,0.16)"}`,
+                                                                    background:
+                                                                        active
+                                                                            ? `${color}1f`
+                                                                            : "transparent",
+                                                                    display:
+                                                                        "flex",
+                                                                    alignItems:
+                                                                        "center",
+                                                                    justifyContent:
+                                                                        "center",
+                                                                    transition:
+                                                                        "border-color 200ms, background 200ms",
                                                                 }}
                                                                 aria-hidden="true"
-                                                            />
-                                                        )}
+                                                            >
+                                                                <Cpu
+                                                                    size={11}
+                                                                    style={{
+                                                                        color: active
+                                                                            ? color
+                                                                            : "rgba(255,255,255,0.3)",
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Chip name */}
+                                                    <span
+                                                        style={{
+                                                            fontFamily:
+                                                                "'Space Grotesk', sans-serif",
+                                                            fontWeight: 600,
+                                                            fontSize: 13,
+                                                            lineHeight: 1.25,
+                                                            color: "var(--text-primary)",
+                                                            minHeight: 33,
+                                                        }}
+                                                    >
+                                                        {proc.name}
+                                                    </span>
+
+                                                    {/* Cores + clock */}
+                                                    <span
+                                                        style={{
+                                                            fontFamily:
+                                                                "'JetBrains Mono', monospace",
+                                                            fontSize: 10.5,
+                                                            color: "var(--text-secondary)",
+                                                            lineHeight: 1.3,
+                                                        }}
+                                                    >
+                                                        {proc.cores} core
+                                                        {proc.cores > 1
+                                                            ? "s"
+                                                            : ""}{" "}
+                                                        · {proc.clockSpeedGHz}{" "}
+                                                        GHz
+                                                    </span>
+
+                                                    {/* Relative-performance bar across the whole timeline */}
+                                                    <div
+                                                        style={{ marginTop: 1 }}
+                                                    >
                                                         <div
                                                             style={{
-                                                                position:
-                                                                    "absolute",
-                                                                inset: 0,
-                                                                borderRadius: 6,
-                                                                border: `1.5px solid ${active ? color : "rgba(255,255,255,0.16)"}`,
-                                                                background: active
-                                                                    ? `${color}1f`
-                                                                    : "transparent",
                                                                 display: "flex",
-                                                                alignItems:
-                                                                    "center",
                                                                 justifyContent:
-                                                                    "center",
-                                                                transition:
-                                                                    "border-color 200ms, background 200ms",
+                                                                    "space-between",
+                                                                marginBottom: 3,
                                                             }}
-                                                            aria-hidden="true"
                                                         >
-                                                            <Cpu
-                                                                size={11}
+                                                            <span
                                                                 style={{
-                                                                    color: active
-                                                                        ? color
-                                                                        : "rgba(255,255,255,0.3)",
+                                                                    fontFamily:
+                                                                        "'JetBrains Mono', monospace",
+                                                                    fontSize: 9,
+                                                                    letterSpacing:
+                                                                        "0.04em",
+                                                                    color: "var(--text-secondary)",
+                                                                    opacity: 0.75,
                                                                 }}
-                                                            />
+                                                            >
+                                                                {
+                                                                    proc.transistorCount
+                                                                }
+                                                            </span>
+                                                            <span
+                                                                style={{
+                                                                    fontFamily:
+                                                                        "'JetBrains Mono', monospace",
+                                                                    fontSize: 9,
+                                                                    color,
+                                                                    opacity: 0.9,
+                                                                }}
+                                                            >
+                                                                {scorePct}%
+                                                            </span>
                                                         </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Chip name */}
-                                                <span
-                                                    style={{
-                                                        fontFamily:
-                                                            "'Space Grotesk', sans-serif",
-                                                        fontWeight: 600,
-                                                        fontSize: 13,
-                                                        lineHeight: 1.25,
-                                                        color: "var(--text-primary)",
-                                                        minHeight: 33,
-                                                    }}
-                                                >
-                                                    {proc.name}
-                                                </span>
-
-                                                {/* Cores + clock */}
-                                                <span
-                                                    style={{
-                                                        fontFamily:
-                                                            "'JetBrains Mono', monospace",
-                                                        fontSize: 10.5,
-                                                        color: "var(--text-secondary)",
-                                                        lineHeight: 1.3,
-                                                    }}
-                                                >
-                                                    {proc.cores} core
-                                                    {proc.cores > 1 ? "s" : ""} ·{" "}
-                                                    {proc.clockSpeedGHz} GHz
-                                                </span>
-
-                                                {/* Relative-performance bar across the whole timeline */}
-                                                <div style={{ marginTop: 1 }}>
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            justifyContent:
-                                                                "space-between",
-                                                            marginBottom: 3,
-                                                        }}
-                                                    >
-                                                        <span
-                                                            style={{
-                                                                fontFamily:
-                                                                    "'JetBrains Mono', monospace",
-                                                                fontSize: 9,
-                                                                letterSpacing:
-                                                                    "0.04em",
-                                                                color: "var(--text-secondary)",
-                                                                opacity: 0.75,
-                                                            }}
-                                                        >
-                                                            {
-                                                                proc.transistorCount
-                                                            }
-                                                        </span>
-                                                        <span
-                                                            style={{
-                                                                fontFamily:
-                                                                    "'JetBrains Mono', monospace",
-                                                                fontSize: 9,
-                                                                color,
-                                                                opacity: 0.9,
-                                                            }}
-                                                        >
-                                                            {scorePct}%
-                                                        </span>
-                                                    </div>
-                                                    <div
-                                                        style={{
-                                                            height: 3,
-                                                            borderRadius: 99,
-                                                            background:
-                                                                "rgba(255,255,255,0.06)",
-                                                            overflow: "hidden",
-                                                        }}
-                                                        title="Relative compute vs. the newest chip"
-                                                    >
                                                         <div
                                                             style={{
-                                                                height: "100%",
-                                                                width: `${scorePct}%`,
+                                                                height: 3,
                                                                 borderRadius: 99,
-                                                                background: color,
-                                                                opacity: 0.85,
+                                                                background:
+                                                                    "rgba(255,255,255,0.06)",
+                                                                overflow:
+                                                                    "hidden",
                                                             }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </button>
-
-                                            <AnimatePresence>
-                                                {openId === proc.id &&
-                                                    !compare && (
-                                                        <div
-                                                            style={{
-                                                                marginTop: 8,
-                                                                width: 264,
-                                                                maxWidth:
-                                                                    "90vw",
-                                                            }}
+                                                            title="Relative compute vs. the newest chip"
                                                         >
-                                                            <SpecCard
-                                                                proc={proc}
-                                                                allProcessors={
-                                                                    processors
-                                                                }
-                                                                onClose={() =>
-                                                                    setOpenId(
-                                                                        null,
-                                                                    )
-                                                                }
-                                                                closeRef={(
-                                                                    el,
-                                                                ) => {
-                                                                    closeRefs.current[
-                                                                        proc.id
-                                                                    ] = el;
+                                                            <div
+                                                                style={{
+                                                                    height: "100%",
+                                                                    width: `${scorePct}%`,
+                                                                    borderRadius: 99,
+                                                                    background:
+                                                                        color,
+                                                                    opacity: 0.85,
                                                                 }}
-                                                                color={color}
-                                                                onCompare={() =>
-                                                                    startCompare(
-                                                                        proc.id,
-                                                                    )
-                                                                }
                                                             />
                                                         </div>
-                                                    )}
-                                            </AnimatePresence>
-                                        </div>
-                                    );
-                                })}
+                                                    </div>
+                                                </button>
+
+                                                <AnimatePresence>
+                                                    {openId === proc.id &&
+                                                        !compare && (
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 8,
+                                                                    width: 264,
+                                                                    maxWidth:
+                                                                        "90vw",
+                                                                }}
+                                                            >
+                                                                <SpecCard
+                                                                    proc={proc}
+                                                                    allProcessors={
+                                                                        processors
+                                                                    }
+                                                                    onClose={() =>
+                                                                        setOpenId(
+                                                                            null,
+                                                                        )
+                                                                    }
+                                                                    closeRef={(
+                                                                        el,
+                                                                    ) => {
+                                                                        closeRefs.current[
+                                                                            proc.id
+                                                                        ] = el;
+                                                                    }}
+                                                                    color={
+                                                                        color
+                                                                    }
+                                                                    onCompare={() =>
+                                                                        startCompare(
+                                                                            proc.id,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        )}
+                                                </AnimatePresence>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

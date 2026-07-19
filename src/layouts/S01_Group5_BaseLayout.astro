@@ -1,15 +1,14 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
-import '../styles/global.css';
+import '../styles/S01_Group5_theme.css';
 
 export interface Props {
   title: string;
   description?: string;
-  showMovingDots?: boolean;
 }
 
 // .astro pages pass props directly; .mdx pages pass them via frontmatter.
-const { title, description = 'Silicon Minds: The Evolution of the Mobile Microprocessor', showMovingDots = false } = Astro.props.frontmatter ?? Astro.props;
+const { title, description = 'Silicon Minds: The Evolution of the Mobile Microprocessor' } = Astro.props.frontmatter ?? Astro.props;
 const base = import.meta.env.BASE_URL;
 
 // Active nav detection
@@ -76,8 +75,9 @@ const navLinks = [
 
       <rect width="1200" height="800" fill="url(#circuit-tile)" />
 
-      {showMovingDots && (
-        <Fragment>
+      {/* Always rendered; visibility is controlled by the .circuit-on class on
+          <body>, which the visitor toggles with the button in the corner. */}
+      <Fragment>
           <!-- Blinking junction nodes -->
           <g class="circuit-anim">
             <circle class="node n1" cx="120"  cy="40"  r="3" fill="#22D3EE"/>
@@ -117,8 +117,7 @@ const navLinks = [
               <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.9;1" dur="9s" begin="2.2s" repeatCount="indefinite"/>
             </circle>
           </g>
-        </Fragment>
-      )}
+      </Fragment>
     </svg>
   </div>
 
@@ -256,12 +255,59 @@ const navLinks = [
     </div>
   </footer>
 
+  <!-- ── Circuit animation toggle ──────────────────────────── -->
+  <button
+    id="circuit-toggle"
+    type="button"
+    aria-pressed="false"
+    aria-label="Turn on circuit background animation"
+    title="Circuit animation"
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M12 2v5M12 17v5M2 12h5M17 12h5" />
+      <path d="M5 5l3 3M19 5l-3 3M5 19l3-3M19 19l-3-3" opacity="0.55" />
+    </svg>
+    <span id="circuit-toggle-label">Lights off</span>
+  </button>
+
   <!-- ── Back to top ───────────────────────────────────────── -->
   <button id="back-to-top" aria-label="Back to top">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 19V5M5 12l7-7 7 7"/>
     </svg>
   </button>
+
+  <!-- ── Circuit animation toggle: off by default, remembered ─ -->
+  <script>
+    function applyCircuit(on: boolean) {
+      document.body.classList.toggle('circuit-on', on);
+      const btn = document.getElementById('circuit-toggle');
+      const label = document.getElementById('circuit-toggle-label');
+      if (btn) {
+        btn.setAttribute('aria-pressed', String(on));
+        btn.setAttribute('aria-label', on
+          ? 'Turn off circuit background animation'
+          : 'Turn on circuit background animation');
+      }
+      if (label) label.textContent = on ? 'Lights on' : 'Lights off';
+    }
+
+    function initCircuitToggle() {
+      // Default off. Only a previously saved "on" turns it on.
+      applyCircuit(localStorage.getItem('sm-circuit') === 'on');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).closest?.('#circuit-toggle')) return;
+      const next = !document.body.classList.contains('circuit-on');
+      localStorage.setItem('sm-circuit', next ? 'on' : 'off');
+      applyCircuit(next);
+    });
+
+    initCircuitToggle();
+    document.addEventListener('astro:page-load', initCircuitToggle);
+  </script>
 
   <!-- ── Scroll UI: progress bar + back-to-top ─────────────── -->
   <script>
